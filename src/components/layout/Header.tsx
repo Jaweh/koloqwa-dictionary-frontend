@@ -122,6 +122,13 @@ export function Header() {
                     style={{ color: "var(--text-secondary)" }}>
                     Submit a Phrase
                   </Link>
+                  {(user?.role === "Admin" || user?.role === "SuperAdmin") && (
+                    <Link href="/admin" onClick={() => setUserMenuOpen(false)}
+                      className="block px-4 py-2 text-sm font-medium transition-colors"
+                      style={{ color: "var(--accent)" }}>
+                      ⚙️ Admin Dashboard
+                    </Link>
+                  )}
                   <div className="border-t mt-1 pt-1" style={{ borderColor: "var(--border)" }}>
                     <button onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-sm transition-colors"
