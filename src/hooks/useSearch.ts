@@ -1,10 +1,8 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useDebounce } from "./useDebounce";
 import { searchWords, searchPhrases } from "@/lib/api";
 import type { PagedResult, WordSummary, PhraseSummary } from "@/types/dictionary";
-
-type SearchType = "words" | "phrases";
 
 interface UseSearchResult<T> {
   results: PagedResult<T> | null;
@@ -16,7 +14,20 @@ interface UseSearchResult<T> {
   setPage: (p: number) => void;
 }
 
-export function useWordSearch(initialQuery = ""): UseSearchResult<WordSummary> {
+interface WordSearchOptions {
+  initialQuery?: string;
+  category?: string;
+  languageCode?: string;
+}
+
+interface PhraseSearchOptions {
+  initialQuery?: string;
+  category?: string;
+  languageCode?: string;
+}
+
+export function useWordSearch(options: WordSearchOptions = {}): UseSearchResult<WordSummary> {
+  const { initialQuery = "", category, languageCode } = options;
   const [query, setQuery] = useState(initialQuery);
   const [page, setPage] = useState(1);
   const [results, setResults] = useState<PagedResult<WordSummary> | null>(null);
@@ -24,9 +35,7 @@ export function useWordSearch(initialQuery = ""): UseSearchResult<WordSummary> {
   const [error, setError] = useState<string | null>(null);
   const debouncedQuery = useDebounce(query, 400);
 
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedQuery]);
+  useEffect(() => { setPage(1); }, [debouncedQuery]);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,7 +43,12 @@ export function useWordSearch(initialQuery = ""): UseSearchResult<WordSummary> {
       setLoading(true);
       setError(null);
       try {
-        const data = await searchWords({ q: debouncedQuery, page });
+        const data = await searchWords({
+          q: debouncedQuery,
+          category,
+          lang: languageCode,
+          page,
+        });
         if (!cancelled) setResults(data);
       } catch (e) {
         if (!cancelled) setError((e as Error).message);
@@ -44,12 +58,13 @@ export function useWordSearch(initialQuery = ""): UseSearchResult<WordSummary> {
     }
     run();
     return () => { cancelled = true; };
-  }, [debouncedQuery, page]);
+  }, [debouncedQuery, category, languageCode, page]);
 
   return { results, loading, error, query, setQuery, page, setPage };
 }
 
-export function usePhraseSearch(initialQuery = ""): UseSearchResult<PhraseSummary> {
+export function usePhraseSearch(options: PhraseSearchOptions = {}): UseSearchResult<PhraseSummary> {
+  const { initialQuery = "", category, languageCode } = options;
   const [query, setQuery] = useState(initialQuery);
   const [page, setPage] = useState(1);
   const [results, setResults] = useState<PagedResult<PhraseSummary> | null>(null);
@@ -57,9 +72,7 @@ export function usePhraseSearch(initialQuery = ""): UseSearchResult<PhraseSummar
   const [error, setError] = useState<string | null>(null);
   const debouncedQuery = useDebounce(query, 400);
 
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedQuery]);
+  useEffect(() => { setPage(1); }, [debouncedQuery]);
 
   useEffect(() => {
     let cancelled = false;
@@ -67,7 +80,12 @@ export function usePhraseSearch(initialQuery = ""): UseSearchResult<PhraseSummar
       setLoading(true);
       setError(null);
       try {
-        const data = await searchPhrases({ q: debouncedQuery, page });
+        const data = await searchPhrases({
+          q: debouncedQuery,
+          category,
+          lang: languageCode,
+          page,
+        });
         if (!cancelled) setResults(data);
       } catch (e) {
         if (!cancelled) setError((e as Error).message);
@@ -77,7 +95,7 @@ export function usePhraseSearch(initialQuery = ""): UseSearchResult<PhraseSummar
     }
     run();
     return () => { cancelled = true; };
-  }, [debouncedQuery, page]);
+  }, [debouncedQuery, category, languageCode, page]);
 
   return { results, loading, error, query, setQuery, page, setPage };
 }

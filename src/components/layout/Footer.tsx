@@ -66,7 +66,7 @@ export function Footer() {
         <div className="mt-10 pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-2"
           style={{ borderColor: "var(--border)" }}>
           <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-            © {new Date().getFullYear()} Koloqwa Dictionary. Built with love by <b>Bridges Technology</b> Group for Liberia 🇱🇷
+            © {new Date().getFullYear()} Koloqwa Dictionary. Built with love by <b>BRIDGES Technology Group</b> for Liberia 🇱🇷
           </p>
           <p className="text-xs" style={{ color: "var(--text-muted)" }}>
             Preserving Liberian voices

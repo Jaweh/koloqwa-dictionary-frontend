@@ -20,8 +20,9 @@ export interface WordSummary {
   headword: string;
   slug: string;
   partOfSpeech: string;
-  languageCode: string;
-  languageName: string;
+  category: string;
+  languageCode: string | null;
+  languageName: string | null;
   firstDefinition: string;
   status: string;
   publishedAt: string | null;
@@ -35,9 +36,10 @@ export interface WordDetail {
   pronunciation: string | null;
   audioUrl: string | null;
   tags: string[];
+  category: string;
   status: string;
-  languageCode: string;
-  languageName: string;
+  languageCode: string | null;
+  languageName: string | null;
   definitions: Definition[];
   publishedAt: string | null;
   createdAt: string;
@@ -62,8 +64,9 @@ export interface PhraseSummary {
   id: string;
   phraseText: string;
   slug: string;
-  languageCode: string;
-  languageName: string;
+  category: string;
+  languageCode: string | null;
+  languageName: string | null;
   firstMeaning: string;
   status: string;
   publishedAt: string | null;
@@ -75,9 +78,10 @@ export interface PhraseDetail {
   slug: string;
   literalMeaning: string | null;
   tags: string[];
+  category: string;
   status: string;
-  languageCode: string;
-  languageName: string;
+  languageCode: string | null;
+  languageName: string | null;
   meanings: Meaning[];
   publishedAt: string | null;
   createdAt: string;
@@ -92,6 +96,7 @@ export interface Meaning {
 
 export interface SearchParams {
   q?: string;
+  category?: string;
   lang?: string;
   pos?: string;
   page?: number;

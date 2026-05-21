@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { TRIBES } from "@/lib/tribes";
+import { TribeMask } from "@/components/ui/TribeMask";
 
 export const metadata: Metadata = {
   title: "Tribal Languages",
@@ -60,9 +61,9 @@ export default function TribesPage() {
 
               {/* Flag + name */}
               <div className="flex items-center gap-3 mb-4">
-                <div className="text-3xl w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden"
                   style={{ background: "var(--bg-secondary)" }}>
-                  {tribe.flag}
+                  <TribeMask code={tribe.code} size={40} />
                 </div>
                 <div>
                   <h2 className="font-display text-lg font-semibold group-hover:text-kola-600 dark:group-hover:text-kola-400 transition-colors"

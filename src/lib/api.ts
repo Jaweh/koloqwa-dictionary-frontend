@@ -10,19 +10,11 @@ import type {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "https://localhost:62971/api/v1";
 
-async function fetchApi<T>(
-  path: string,
-  options?: RequestInit
-): Promise<T> {
+async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE}${path}`;
   const res = await fetch(url, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(options?.headers ?? {}),
-    },
-    // Allow self-signed cert in dev
-    ...(process.env.NODE_ENV === "development" ? {} : {}),
+    headers: { "Content-Type": "application/json", ...(options?.headers ?? {}) },
   });
 
   if (!res.ok) {
@@ -45,11 +37,10 @@ function buildQuery(params: Record<string, string | number | undefined>): string
 }
 
 // ── Words ────────────────────────────────────────────────────────────────────
-export async function searchWords(
-  params: SearchParams
-): Promise<PagedResult<WordSummary>> {
+export async function searchWords(params: SearchParams): Promise<PagedResult<WordSummary>> {
   const qs = buildQuery({
     q: params.q,
+    category: params.category,
     lang: params.lang,
     pos: params.pos,
     page: params.page ?? 1,
@@ -63,11 +54,10 @@ export async function getWordBySlug(slug: string): Promise<WordDetail> {
 }
 
 // ── Phrases ──────────────────────────────────────────────────────────────────
-export async function searchPhrases(
-  params: SearchParams
-): Promise<PagedResult<PhraseSummary>> {
+export async function searchPhrases(params: SearchParams): Promise<PagedResult<PhraseSummary>> {
   const qs = buildQuery({
     q: params.q,
+    category: params.category,
     lang: params.lang,
     page: params.page ?? 1,
     pageSize: params.pageSize ?? 20,
@@ -77,4 +67,8 @@ export async function searchPhrases(
 
 export async function getPhraseBySlug(slug: string): Promise<PhraseDetail> {
   return fetchApi<PhraseDetail>(`/phrases/${slug}`);
+}
+
+export async function getLanguages(): Promise<{ id: string; code: string; name: string }[]> {
+  return fetchApi<{ id: string; code: string; name: string }[]>("/languages");
 }

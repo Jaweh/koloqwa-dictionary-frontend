@@ -11,8 +11,9 @@ interface Props {
   initialLang: string;
 }
 
-export function WordSearchClient({ initialQuery, initialLang }: Props) {
-  const { results, loading, error, query, setQuery, page, setPage } = useWordSearch(initialQuery);
+export function WordSearchClient({ initialQuery }: Props) {
+  const { results, loading, error, query, setQuery, page, setPage } =
+    useWordSearch({ initialQuery, category: "Vernacular" });
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
@@ -21,7 +22,7 @@ export function WordSearchClient({ initialQuery, initialLang }: Props) {
           Word Dictionary
         </h1>
         <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-          Search across Liberian language words
+          Liberian vernacular words and street language
         </p>
       </div>
 

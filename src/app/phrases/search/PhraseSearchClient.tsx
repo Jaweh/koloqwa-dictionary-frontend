@@ -7,7 +7,8 @@ import { Pagination } from "@/components/ui/Pagination";
 import { usePhraseSearch } from "@/hooks/useSearch";
 
 export function PhraseSearchClient({ initialQuery }: { initialQuery: string }) {
-  const { results, loading, error, query, setQuery, page, setPage } = usePhraseSearch(initialQuery);
+  const { results, loading, error, query, setQuery, page, setPage } =
+    usePhraseSearch({ initialQuery, category: "Vernacular" });
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
@@ -16,7 +17,7 @@ export function PhraseSearchClient({ initialQuery }: { initialQuery: string }) {
           Phrases & Expressions
         </h1>
         <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-          Idioms, proverbs and everyday expressions from Liberian languages
+          Liberian idioms, proverbs and everyday expressions
         </p>
       </div>
 
