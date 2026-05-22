@@ -73,11 +73,30 @@ export async function getMySubmissions(
   return json.data;
 }
 
-export async function cancelSubmission(id: string, accessToken: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/submissions/${id}`, {
-    method: "DELETE",
+export async function updateProfile(
+  accessToken: string,
+  data: { displayName?: string; email?: string }
+): Promise<{ displayName: string; email: string; role: string }> {
+  const res = await fetch(`${API_BASE}/profile`, {
+    method: "PUT",
     headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify(data),
   });
   const json = await res.json();
-  if (!json.success) throw new Error(json.message ?? "Failed to cancel submission");
+  if (!json.success) throw new Error(json.message ?? "Failed to update profile");
+  return json.data;
+}
+
+export async function changePassword(
+  accessToken: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<void> {
+  const res = await fetch(`${API_BASE}/profile/password`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.message ?? "Failed to change password");
 }

@@ -112,6 +112,11 @@ export function Header() {
                     style={{ color: "var(--text-secondary)" }}>
                     My Submissions
                   </Link>
+                  <Link href="/profile" onClick={() => setUserMenuOpen(false)}
+                    className="block px-4 py-2 text-sm transition-colors"
+                    style={{ color: "var(--text-secondary)" }}>
+                    My Profile
+                  </Link>
                   <Link href="/submit/word" onClick={() => setUserMenuOpen(false)}
                     className="block px-4 py-2 text-sm transition-colors"
                     style={{ color: "var(--text-secondary)" }}>
