@@ -114,11 +114,20 @@ export function ProfileClient() {
               <h1 className="font-display text-3xl font-semibold" style={{ color: "var(--text-primary)" }}>
                 {user?.displayName}
               </h1>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <span className="text-sm" style={{ color: "var(--text-muted)" }}>{user?.email}</span>
                 <span className="text-xs px-2 py-0.5 rounded-full font-medium"
                   style={{ background: "color-mix(in srgb, var(--accent) 12%, transparent)", color: "var(--accent)" }}>
                   {user?.role}
+                </span>
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+                  style={{
+                    background: user?.emailVerified
+                      ? "color-mix(in srgb, #639922 12%, transparent)"
+                      : "color-mix(in srgb, #BA7517 12%, transparent)",
+                    color: user?.emailVerified ? "#3B6D11" : "#BA7517"
+                  }}>
+                  {user?.emailVerified ? "✓ Email verified" : "⚠ Email not verified"}
                 </span>
               </div>
             </div>
@@ -241,7 +250,6 @@ export function ProfileClient() {
             )}
           </div>
         )}
-
       </div>
     </ProtectedRoute>
   );

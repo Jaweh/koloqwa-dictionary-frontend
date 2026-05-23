@@ -25,8 +25,11 @@ export function Header() {
   const handleLogout = () => {
     logout();
     setUserMenuOpen(false);
+    setMenuOpen(false);
     router.push("/");
   };
+
+  const isAdmin = user?.role === "Admin" || user?.role === "SuperAdmin";
 
   return (
     <header className="sticky top-0 z-50 border-b backdrop-blur-md"
@@ -84,7 +87,7 @@ export function Header() {
             )}
           </button>
 
-          {/* Auth buttons or user menu */}
+          {/* Desktop auth */}
           {isAuthenticated ? (
             <div className="relative hidden md:block">
               <button onClick={() => setUserMenuOpen(!userMenuOpen)}
@@ -108,7 +111,7 @@ export function Header() {
                     <p className="text-xs" style={{ color: "var(--text-muted)" }}>{user?.email}</p>
                   </div>
                   <Link href="/dashboard" onClick={() => setUserMenuOpen(false)}
-                    className="block px-4 py-2 text-sm transition-colors hover:bg-opacity-50"
+                    className="block px-4 py-2 text-sm transition-colors"
                     style={{ color: "var(--text-secondary)" }}>
                     My Submissions
                   </Link>
@@ -127,7 +130,7 @@ export function Header() {
                     style={{ color: "var(--text-secondary)" }}>
                     Submit a Phrase
                   </Link>
-                  {(user?.role === "Admin" || user?.role === "SuperAdmin") && (
+                  {isAdmin && (
                     <Link href="/admin" onClick={() => setUserMenuOpen(false)}
                       className="block px-4 py-2 text-sm font-medium transition-colors"
                       style={{ color: "var(--accent)" }}>
@@ -174,9 +177,11 @@ export function Header() {
       {menuOpen && (
         <div className="md:hidden border-t py-2 px-4"
           style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-primary)" }}>
+
+          {/* Nav links */}
           {NAV.map(({ href, label, highlight }) => (
             <Link key={href} href={href}
-              className="flex items-center justify-between py-3 text-sm font-medium border-b last:border-0"
+              className="flex items-center justify-between py-3 text-sm font-medium border-b"
               style={{ color: highlight ? "var(--accent)" : "var(--text-secondary)", borderColor: "var(--border)" }}
               onClick={() => setMenuOpen(false)}>
               {label}
@@ -188,15 +193,48 @@ export function Header() {
               )}
             </Link>
           ))}
+
           {isAuthenticated ? (
             <>
+              {/* User info */}
+              <div className="py-3 border-b" style={{ borderColor: "var(--border)" }}>
+                <p className="text-xs font-medium" style={{ color: "var(--text-primary)" }}>{user?.displayName}</p>
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>{user?.email}</p>
+              </div>
+
               <Link href="/dashboard"
-                className="block py-3 text-sm font-medium border-b"
+                className="flex items-center py-3 text-sm font-medium border-b"
                 style={{ color: "var(--text-secondary)", borderColor: "var(--border)" }}
                 onClick={() => setMenuOpen(false)}>
                 My Submissions
               </Link>
-              <button onClick={() => { handleLogout(); setMenuOpen(false); }}
+              <Link href="/profile"
+                className="flex items-center py-3 text-sm font-medium border-b"
+                style={{ color: "var(--text-secondary)", borderColor: "var(--border)" }}
+                onClick={() => setMenuOpen(false)}>
+                My Profile
+              </Link>
+              <Link href="/submit/word"
+                className="flex items-center py-3 text-sm font-medium border-b"
+                style={{ color: "var(--text-secondary)", borderColor: "var(--border)" }}
+                onClick={() => setMenuOpen(false)}>
+                Submit a Word
+              </Link>
+              <Link href="/submit/phrase"
+                className="flex items-center py-3 text-sm font-medium border-b"
+                style={{ color: "var(--text-secondary)", borderColor: "var(--border)" }}
+                onClick={() => setMenuOpen(false)}>
+                Submit a Phrase
+              </Link>
+              {isAdmin && (
+                <Link href="/admin"
+                  className="flex items-center py-3 text-sm font-medium border-b"
+                  style={{ color: "var(--accent)", borderColor: "var(--border)" }}
+                  onClick={() => setMenuOpen(false)}>
+                  ⚙️ Admin Dashboard
+                </Link>
+              )}
+              <button onClick={handleLogout}
                 className="block w-full text-left py-3 text-sm"
                 style={{ color: "var(--text-muted)" }}>
                 Sign out

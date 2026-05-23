@@ -36,6 +36,7 @@ export interface AdminUser {
   displayName: string;
   role: string;
   isActive: boolean;
+  emailVerified: boolean;
   submissionCount: number;
   approvedCount: number;
   createdAt: string;

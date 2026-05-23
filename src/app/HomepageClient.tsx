@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { SearchInput } from "@/components/search/SearchInput";
 import { SearchTabs } from "@/components/search/SearchTabs";
@@ -7,7 +7,9 @@ import { WordCard } from "@/components/dictionary/WordCard";
 import { PhraseCard } from "@/components/dictionary/PhraseCard";
 import { WordCardSkeleton, PhraseCardSkeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Pagination } from "@/components/ui/Pagination";
 import { useWordSearch, usePhraseSearch } from "@/hooks/useSearch";
+import { searchWords, searchPhrases } from "@/lib/api";
 import { TRIBES } from "@/lib/tribes";
 import { TribeMask } from "@/components/ui/TribeMask";
 import type { WordSummary, PhraseSummary } from "@/types/dictionary";
@@ -21,19 +23,67 @@ const VERNACULAR_SAMPLES = [
   { word: "Fine-o", meaning: "I'm fine / Things are good" },
 ];
 
+const PAGE_SIZE = 6;
+const PHRASE_PAGE_SIZE = 4;
+
 interface Props {
   initialWords: WordSummary[];
   initialPhrases: PhraseSummary[];
+  initialWordsTotalPages: number;
+  initialPhrasesTotalPages: number;
 }
 
-export function HomepageClient({ initialWords, initialPhrases }: Props) {
+export function HomepageClient({
+  initialWords,
+  initialPhrases,
+  initialWordsTotalPages,
+  initialPhrasesTotalPages,
+}: Props) {
   const [activeTab, setActiveTab] = useState<"words" | "phrases">("words");
+
+  // ── Recently added words ───────────────────────────────────────
+  const [words, setWords] = useState<WordSummary[]>(initialWords);
+  const [wordsPage, setWordsPage] = useState(1);
+  const [wordsTotalPages, setWordsTotalPages] = useState(initialWordsTotalPages);
+  const [wordsLoading, setWordsLoading] = useState(false);
+
+  // ── Recently added phrases ─────────────────────────────────────
+  const [phrases, setPhrases] = useState<PhraseSummary[]>(initialPhrases);
+  const [phrasesPage, setPhrasesPage] = useState(1);
+  const [phrasesTotalPages, setPhrasesTotalPages] = useState(initialPhrasesTotalPages);
+  const [phrasesLoading, setPhrasesLoading] = useState(false);
 
   // Vernacular-only search on homepage
   const wordSearch = useWordSearch({ category: "Vernacular" });
   const phraseSearch = usePhraseSearch({ category: "Vernacular" });
 
   const isSearching = wordSearch.query.length > 0 || phraseSearch.query.length > 0;
+
+  // Fetch words on page change
+  useEffect(() => {
+    if (wordsPage === 1 && initialWords.length > 0) return;
+    setWordsLoading(true);
+    searchWords({ page: wordsPage, pageSize: PAGE_SIZE })
+      .then(data => {
+        setWords(data.items);
+        setWordsTotalPages(data.totalPages);
+      })
+      .catch(() => {})
+      .finally(() => setWordsLoading(false));
+  }, [wordsPage]);
+
+  // Fetch phrases on page change
+  useEffect(() => {
+    if (phrasesPage === 1 && initialPhrases.length > 0) return;
+    setPhrasesLoading(true);
+    searchPhrases({ page: phrasesPage, pageSize: PHRASE_PAGE_SIZE })
+      .then(data => {
+        setPhrases(data.items);
+        setPhrasesTotalPages(data.totalPages);
+      })
+      .catch(() => {})
+      .finally(() => setPhrasesLoading(false));
+  }, [phrasesPage]);
 
   return (
     <div>
@@ -156,6 +206,7 @@ export function HomepageClient({ initialWords, initialPhrases }: Props) {
       {/* ── Not searching ────────────────────────────────────────── */}
       {!isSearching && (
         <>
+          {/* Sample expressions */}
           <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
             <div className="mb-8">
               <h2 className="font-display text-3xl font-semibold mb-2" style={{ color: "var(--text-primary)" }}>
@@ -185,7 +236,8 @@ export function HomepageClient({ initialWords, initialPhrases }: Props) {
             </div>
           </section>
 
-          {initialWords.length > 0 && (
+          {/* Recently added words */}
+          {(words.length > 0 || wordsLoading) && (
             <section className="px-4 sm:px-6 py-16" style={{ background: "var(--bg-secondary)" }}>
               <div className="max-w-6xl mx-auto">
                 <div className="flex items-center justify-between mb-8">
@@ -198,19 +250,33 @@ export function HomepageClient({ initialWords, initialPhrases }: Props) {
                   <Link href="/words/search" className="text-sm font-medium hidden sm:block"
                     style={{ color: "var(--accent)" }}>Browse all →</Link>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {initialWords.map((word, i) => (
-                    <div key={word.id} className="opacity-0 animate-fade-up"
-                      style={{ animationDelay: `${i * 80}ms`, animationFillMode: "forwards" }}>
-                      <WordCard word={word} />
-                    </div>
-                  ))}
-                </div>
+
+                {wordsLoading ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[...Array(PAGE_SIZE)].map((_, i) => <WordCardSkeleton key={i} />)}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {words.map((word, i) => (
+                      <div key={word.id} className="opacity-0 animate-fade-up"
+                        style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards" }}>
+                        <WordCard word={word} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <Pagination
+                  page={wordsPage}
+                  totalPages={wordsTotalPages}
+                  onPage={p => { setWordsPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                />
               </div>
             </section>
           )}
 
-          {initialPhrases.length > 0 && (
+          {/* Expressions & phrases */}
+          {(phrases.length > 0 || phrasesLoading) && (
             <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
               <div className="flex items-center justify-between mb-8">
                 <div>
@@ -222,14 +288,27 @@ export function HomepageClient({ initialWords, initialPhrases }: Props) {
                 <Link href="/phrases/search" className="text-sm font-medium hidden sm:block"
                   style={{ color: "var(--accent)" }}>Browse all →</Link>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {initialPhrases.map((phrase, i) => (
-                  <div key={phrase.id} className="opacity-0 animate-fade-up"
-                    style={{ animationDelay: `${i * 80}ms`, animationFillMode: "forwards" }}>
-                    <PhraseCard phrase={phrase} />
-                  </div>
-                ))}
-              </div>
+
+              {phrasesLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[...Array(PHRASE_PAGE_SIZE)].map((_, i) => <PhraseCardSkeleton key={i} />)}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {phrases.map((phrase, i) => (
+                    <div key={phrase.id} className="opacity-0 animate-fade-up"
+                      style={{ animationDelay: `${i * 60}ms`, animationFillMode: "forwards" }}>
+                      <PhraseCard phrase={phrase} />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <Pagination
+                page={phrasesPage}
+                totalPages={phrasesTotalPages}
+                onPage={p => { setPhrasesPage(p); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+              />
             </section>
           )}
 
@@ -262,35 +341,6 @@ export function HomepageClient({ initialWords, initialPhrases }: Props) {
                   </Link>
                 </div>
 
-                {/* <div className="grid grid-cols-4 gap-2">
-                  {[
-                    { code: "kpe", name: "Kpelle", flag: "🌿" },
-                    { code: "bss", name: "Bassa", flag: "🌊" },
-                    { code: "grb", name: "Grebo", flag: "🌄" },
-                    { code: "gio", name: "Gio", flag: "🦅" },
-                    { code: "vai", name: "Vai", flag: "📜" },
-                    { code: "kru", name: "Kru", flag: "⚓" },
-                    { code: "man", name: "Mandingo", flag: "📿" },
-                    { code: "lor", name: "Lorma", flag: "🌾" },
-                    { code: "mno", name: "Mano", flag: "⚒️" },
-                    { code: "kis", name: "Kissi", flag: "🎵" },
-                    { code: "gol", name: "Gola", flag: "🎭" },
-                    { code: "sap", name: "Sapo", flag: "🌳" },
-                    { code: "bel", name: "Belle", flag: "🍃" },
-                    { code: "dey", name: "Dey", flag: "🏙️" },
-                    { code: "mnd", name: "Mende", flag: "🏔️" },
-                    { code: "gbd", name: "Gbandi", flag: "🧵" },
-                  ].map(tribe => (
-                    <Link key={tribe.code} href={`/tribes/${tribe.code}`}
-                      className="aspect-square rounded-xl flex flex-col items-center justify-center gap-1 transition-all hover:scale-105"
-                      style={{ background: "var(--bg-primary)", border: "1px solid var(--border)" }}>
-                      <span className="text-xl">{tribe.flag}</span>
-                      <span className="text-xs font-medium text-center leading-tight px-1"
-                        style={{ color: "var(--text-muted)" }}>{tribe.name}</span>
-                    </Link>
-                  ))}
-                </div> */}
-
                 <div className="grid grid-cols-4 gap-2">
                   {TRIBES.map(tribe => (
                     <Link key={tribe.code} href={`/tribes/${tribe.code}`}
@@ -302,12 +352,11 @@ export function HomepageClient({ initialWords, initialPhrases }: Props) {
                     </Link>
                   ))}
                 </div>
-
-                
               </div>
             </div>
           </section>
 
+          {/* What is Koloqwa */}
           <section className="py-20 px-4 sm:px-6">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="font-display text-4xl font-semibold italic mb-6" style={{ color: "var(--text-primary)" }}>

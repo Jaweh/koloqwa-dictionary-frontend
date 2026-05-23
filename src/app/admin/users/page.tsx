@@ -14,6 +14,12 @@ const ROLE_STYLES: Record<string, { bg: string; color: string }> = {
   SuperAdmin: { bg: "color-mix(in srgb, #BF0A30 12%, transparent)", color: "#BF0A30" },
 };
 
+interface ConfirmState {
+  userId: string;
+  displayName: string;
+  isActive: boolean;
+}
+
 export default function AdminUsers() {
   const { accessToken, user: currentUser } = useAuth();
   const router = useRouter();
@@ -22,10 +28,10 @@ export default function AdminUsers() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<ConfirmState | null>(null);
 
   const isSuperAdmin = currentUser?.role === "SuperAdmin";
 
-  // Route-level guard — redirect non-SuperAdmins away
   useEffect(() => {
     if (currentUser && !isSuperAdmin) router.push("/admin");
   }, [currentUser, isSuperAdmin, router]);
@@ -53,12 +59,12 @@ export default function AdminUsers() {
     finally { setActionLoading(null); }
   }
 
-  async function handleToggleActive(userId: string, isActive: boolean) {
-    if (!accessToken) return;
-    if (!confirm(`${isActive ? "Activate" : "Deactivate"} this user?`)) return;
-    setActionLoading(userId);
+  async function handleToggleActive() {
+    if (!confirm || !accessToken) return;
+    setActionLoading(confirm.userId);
+    setConfirm(null);
     try {
-      await toggleUserActive(accessToken, userId, isActive);
+      await toggleUserActive(accessToken, confirm.userId, !confirm.isActive);
       await load();
     } catch (e) { alert((e as Error).message); }
     finally { setActionLoading(null); }
@@ -103,7 +109,7 @@ export default function AdminUsers() {
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ background: "var(--bg-secondary)", borderBottom: "1px solid var(--border)" }}>
-                  {["User", "Role", "Submissions", "Approved", "Joined", "Status", "Actions"].map(h => (
+                  {["User", "Role", "Submissions", "Approved", "Joined", "Status", "Verified", "Actions"].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider"
                       style={{ color: "var(--text-muted)" }}>{h}</th>
                   ))}
@@ -154,12 +160,25 @@ export default function AdminUsers() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                          style={{
+                            background: u.emailVerified ? "color-mix(in srgb, #639922 12%, transparent)" : "color-mix(in srgb, #BA7517 12%, transparent)",
+                            color: u.emailVerified ? "#3B6D11" : "#BA7517"
+                          }}>
+                          {u.emailVerified ? "✓ Verified" : "⚠ Unverified"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
                         {!isCurrentUser && (
                           <button
-                            onClick={() => handleToggleActive(u.id, !u.isActive)}
+                            onClick={() => setConfirm({ userId: u.id, displayName: u.displayName, isActive: u.isActive })}
                             disabled={actionLoading === u.id}
                             className="text-xs px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50"
-                            style={{ color: u.isActive ? "#BF0A30" : "#3B6D11", border: `1px solid ${u.isActive ? "color-mix(in srgb, #BF0A30 30%, transparent)" : "color-mix(in srgb, #639922 30%, transparent)"}`, background: "transparent" }}>
+                            style={{
+                              color: u.isActive ? "#BF0A30" : "#3B6D11",
+                              border: `1px solid ${u.isActive ? "color-mix(in srgb, #BF0A30 30%, transparent)" : "color-mix(in srgb, #639922 30%, transparent)"}`,
+                              background: "transparent"
+                            }}>
                             {actionLoading === u.id ? "..." : u.isActive ? "Deactivate" : "Activate"}
                           </button>
                         )}
@@ -172,6 +191,37 @@ export default function AdminUsers() {
           </div>
           <Pagination page={page} totalPages={data?.totalPages ?? 1} onPage={setPage} />
         </>
+      )}
+
+      {/* Custom confirm modal */}
+      {confirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.5)" }}
+          onClick={e => { if (e.target === e.currentTarget) setConfirm(null); }}>
+          <div className="w-full max-w-sm rounded-2xl p-6 shadow-2xl"
+            style={{ background: "var(--bg-primary)", border: "1px solid var(--border)" }}>
+            <h2 className="font-display text-xl font-semibold mb-2" style={{ color: "var(--text-primary)" }}>
+              {confirm.isActive ? "Deactivate" : "Activate"} user
+            </h2>
+            <p className="text-sm mb-6" style={{ color: "var(--text-secondary)" }}>
+              Are you sure you want to {confirm.isActive ? "deactivate" : "activate"}{" "}
+              <span className="font-medium" style={{ color: "var(--text-primary)" }}>{confirm.displayName}</span>?
+              {confirm.isActive && " They will no longer be able to log in."}
+            </p>
+            <div className="flex gap-3">
+              <button onClick={handleToggleActive}
+                className="flex-1 h-10 rounded-xl text-sm font-medium text-white"
+                style={{ background: confirm.isActive ? "#BF0A30" : "#3B6D11" }}>
+                Yes, {confirm.isActive ? "deactivate" : "activate"}
+              </button>
+              <button onClick={() => setConfirm(null)}
+                className="flex-1 h-10 rounded-xl text-sm font-medium"
+                style={{ background: "var(--bg-secondary)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

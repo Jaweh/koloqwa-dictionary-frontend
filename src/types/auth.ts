@@ -4,6 +4,7 @@ export interface AuthUser {
   displayName: string;
   role: "User" | "Admin" | "SuperAdmin";
   isActive: boolean;
+  emailVerified: boolean;
   createdAt: string;
 }
 

@@ -30,8 +30,16 @@ export function TribePageClient({ tribeCode, tribeName, tribeFlag }: Props) {
 
   const hasWords = (wordSearch.results?.totalCount ?? 0) > 0;
   const hasPhrases = (phraseSearch.results?.totalCount ?? 0) > 0;
-  const isLoading = wordSearch.loading || phraseSearch.loading;
+
+  // Each tab has its own loading state — don't block both on one loading
+  const wordsLoading = wordSearch.loading;
+  const phrasesLoading = phraseSearch.loading;
+
+  // Show tabs once at least one search has resolved
+  const bothInitializing = wordsLoading && phrasesLoading && !wordSearch.results && !phraseSearch.results;
   const hasAnyContent = hasWords || hasPhrases;
+  const neitherLoading = !wordsLoading && !phrasesLoading;
+  const showEmpty = neitherLoading && !hasAnyContent;
 
   return (
     <section>
@@ -48,13 +56,24 @@ export function TribePageClient({ tribeCode, tribeName, tribeFlag }: Props) {
         )}
       </div>
 
-      {/* Only show tabs and search if there is content or still loading */}
-      {(isLoading || hasAnyContent) && (
+      {/* Initial loading — both tabs loading for the first time */}
+      {bothInitializing && (
+        <div className="space-y-4">
+          <div className="h-10 rounded-xl skeleton w-48" />
+          <div className="h-10 rounded-xl skeleton" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[...Array(4)].map((_, i) => <WordCardSkeleton key={i} />)}
+          </div>
+        </div>
+      )}
+
+      {/* Tabs + content — show once at least one has resolved */}
+      {!bothInitializing && (hasAnyContent || wordsLoading || phrasesLoading) && (
         <>
           <div className="mb-4">
             <SearchTabs
               tabs={[
-                { id: "words", label: "Words", count: wordSearch.results?.totalCount },
+                { id: "words",   label: "Words",   count: wordSearch.results?.totalCount },
                 { id: "phrases", label: "Phrases", count: phraseSearch.results?.totalCount },
               ]}
               active={activeTab}
@@ -68,7 +87,7 @@ export function TribePageClient({ tribeCode, tribeName, tribeFlag }: Props) {
                 value={wordSearch.query}
                 onChange={wordSearch.setQuery}
                 placeholder={`Search ${tribeName} words...`}
-                loading={wordSearch.loading}
+                loading={wordsLoading}
                 size="md"
               />
             ) : (
@@ -76,21 +95,27 @@ export function TribePageClient({ tribeCode, tribeName, tribeFlag }: Props) {
                 value={phraseSearch.query}
                 onChange={phraseSearch.setQuery}
                 placeholder={`Search ${tribeName} phrases...`}
-                loading={phraseSearch.loading}
+                loading={phrasesLoading}
                 size="md"
               />
             )}
           </div>
 
+          {/* Words tab */}
           {activeTab === "words" && (
-            wordSearch.loading ? (
+            wordsLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[...Array(4)].map((_, i) => <WordCardSkeleton key={i} />)}
               </div>
             ) : wordSearch.results?.items.length === 0 ? (
-              <p className="text-sm text-center py-8" style={{ color: "var(--text-muted)" }}>
-                No {tribeName} words match &ldquo;{wordSearch.query}&rdquo;
-              </p>
+              <div className="text-center py-12 rounded-2xl border-2 border-dashed"
+                style={{ borderColor: "var(--border)" }}>
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                  {wordSearch.query
+                    ? `No ${tribeName} words match "${wordSearch.query}"`
+                    : `No ${tribeName} words yet`}
+                </p>
+              </div>
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -105,15 +130,21 @@ export function TribePageClient({ tribeCode, tribeName, tribeFlag }: Props) {
             )
           )}
 
+          {/* Phrases tab */}
           {activeTab === "phrases" && (
-            phraseSearch.loading ? (
+            phrasesLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[...Array(4)].map((_, i) => <PhraseCardSkeleton key={i} />)}
               </div>
             ) : phraseSearch.results?.items.length === 0 ? (
-              <p className="text-sm text-center py-8" style={{ color: "var(--text-muted)" }}>
-                No {tribeName} phrases match &ldquo;{phraseSearch.query}&rdquo;
-              </p>
+              <div className="text-center py-12 rounded-2xl border-2 border-dashed"
+                style={{ borderColor: "var(--border)" }}>
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                  {phraseSearch.query
+                    ? `No ${tribeName} phrases match "${phraseSearch.query}"`
+                    : `No ${tribeName} phrases yet`}
+                </p>
+              </div>
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -130,8 +161,8 @@ export function TribePageClient({ tribeCode, tribeName, tribeFlag }: Props) {
         </>
       )}
 
-      {/* Empty state — shown when loading is done and no content exists */}
-      {!isLoading && !hasAnyContent && (
+      {/* Empty state — both done loading, nothing found */}
+      {showEmpty && (
         <div className="text-center py-16 px-6 rounded-2xl border-2 border-dashed"
           style={{ borderColor: "var(--border)" }}>
           <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center overflow-hidden"
