@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getAdminUsers, updateUserRole, toggleUserActive, type AdminUser } from "@/lib/admin-api";
 import { Pagination } from "@/components/ui/Pagination";
@@ -15,6 +16,7 @@ const ROLE_STYLES: Record<string, { bg: string; color: string }> = {
 
 export default function AdminUsers() {
   const { accessToken, user: currentUser } = useAuth();
+  const router = useRouter();
   const [data, setData] = useState<PagedResult<AdminUser> | null>(null);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -23,8 +25,13 @@ export default function AdminUsers() {
 
   const isSuperAdmin = currentUser?.role === "SuperAdmin";
 
+  // Route-level guard — redirect non-SuperAdmins away
+  useEffect(() => {
+    if (currentUser && !isSuperAdmin) router.push("/admin");
+  }, [currentUser, isSuperAdmin, router]);
+
   const load = useCallback(async () => {
-    if (!accessToken) return;
+    if (!accessToken || !isSuperAdmin) return;
     setLoading(true);
     try {
       const result = await getAdminUsers(accessToken, { search: search || undefined, page });
@@ -32,7 +39,7 @@ export default function AdminUsers() {
     } finally {
       setLoading(false);
     }
-  }, [accessToken, search, page]);
+  }, [accessToken, isSuperAdmin, search, page]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -56,6 +63,8 @@ export default function AdminUsers() {
     } catch (e) { alert((e as Error).message); }
     finally { setActionLoading(null); }
   }
+
+  if (!isSuperAdmin) return null;
 
   return (
     <div>

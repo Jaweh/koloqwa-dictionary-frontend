@@ -5,17 +5,19 @@ import { AdminRoute } from "@/components/auth/AdminRoute";
 import { useAuth } from "@/context/AuthContext";
 
 const NAV = [
-  { href: "/admin",             label: "Overview",    icon: "📊" },
-  { href: "/admin/submissions", label: "Submissions", icon: "📝" },
-  { href: "/admin/reports",     label: "Reports",     icon: "🚩" },
-  { href: "/admin/suggestions", label: "Suggestions", icon: "✏️" },
-  { href: "/admin/users",       label: "Users",       icon: "👥" },
-  { href: "/admin/analytics",   label: "Analytics",   icon: "📈" },
+  { href: "/admin",             label: "Overview",    icon: "📊", superAdminOnly: false },
+  { href: "/admin/submissions", label: "Submissions", icon: "📝", superAdminOnly: false },
+  { href: "/admin/reports",     label: "Reports",     icon: "🚩", superAdminOnly: false },
+  { href: "/admin/suggestions", label: "Suggestions", icon: "✏️", superAdminOnly: false },
+  { href: "/admin/users",       label: "Users",       icon: "👥", superAdminOnly: true  },
+  { href: "/admin/analytics",   label: "Analytics",   icon: "📈", superAdminOnly: true  },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user } = useAuth();
+
+  const isSuperAdmin = user?.role === "SuperAdmin";
 
   return (
     <AdminRoute>
@@ -44,7 +46,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <aside className="w-48 min-h-screen border-r p-4 flex-shrink-0 hidden md:block"
             style={{ borderColor: "var(--border)", background: "var(--bg-secondary)" }}>
             <nav className="space-y-1">
-              {NAV.map(({ href, label, icon }) => {
+              {NAV.filter(item => !item.superAdminOnly || isSuperAdmin).map(({ href, label, icon }) => {
                 const active = pathname === href || (href !== "/admin" && pathname.startsWith(href));
                 return (
                   <Link key={href} href={href}

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 interface DailyCount { date: string; count: number; }
@@ -103,13 +104,21 @@ function Card({ title, children, className }: { title: string; children: React.R
 }
 
 export default function AdminAnalytics() {
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
+  const router = useRouter();
   const [data, setData] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(30);
 
+  const isSuperAdmin = user?.role === "SuperAdmin";
+
+  // Route-level guard — redirect non-SuperAdmins away
   useEffect(() => {
-    if (!accessToken) return;
+    if (user && !isSuperAdmin) router.push("/admin");
+  }, [user, isSuperAdmin, router]);
+
+  useEffect(() => {
+    if (!accessToken || !isSuperAdmin) return;
     setLoading(true);
     fetch(`${API_BASE}/admin/analytics?days=${days}`, {
       headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }
@@ -117,7 +126,9 @@ export default function AdminAnalytics() {
       .then(r => r.json())
       .then(j => setData(j.data))
       .finally(() => setLoading(false));
-  }, [accessToken, days]);
+  }, [accessToken, isSuperAdmin, days]);
+
+  if (!isSuperAdmin) return null;
 
   if (loading) return (
     <div>
@@ -137,11 +148,10 @@ export default function AdminAnalytics() {
   const maxApproved = Math.max(...data.topApproved.map(c => c.count), 1);
   const maxTribe = Math.max(...data.tribeBreakdown.map(t => t.count), 1);
 
-  // Merge category breakdown
-  const vernacularWords = data.categoryBreakdown.find(c => c.category === "Vernacular" && c.entryType === "Word")?.count ?? 0;
+  const vernacularWords   = data.categoryBreakdown.find(c => c.category === "Vernacular" && c.entryType === "Word")?.count ?? 0;
   const vernacularPhrases = data.categoryBreakdown.find(c => c.category === "Vernacular" && c.entryType === "Phrase")?.count ?? 0;
-  const tribalWords = data.categoryBreakdown.find(c => c.category === "Tribal" && c.entryType === "Word")?.count ?? 0;
-  const tribalPhrases = data.categoryBreakdown.find(c => c.category === "Tribal" && c.entryType === "Phrase")?.count ?? 0;
+  const tribalWords       = data.categoryBreakdown.find(c => c.category === "Tribal"     && c.entryType === "Word")?.count ?? 0;
+  const tribalPhrases     = data.categoryBreakdown.find(c => c.category === "Tribal"     && c.entryType === "Phrase")?.count ?? 0;
 
   return (
     <div>
@@ -194,7 +204,7 @@ export default function AdminAnalytics() {
           <Card title="Approval rate">
             <DonutChart segments={[
               { label: "Approved", value: approvalRate.approved, color: "#3B6D11" },
-              { label: "Pending", value: approvalRate.pending, color: "#BA7517" },
+              { label: "Pending",  value: approvalRate.pending,  color: "#BA7517" },
               { label: "Rejected", value: approvalRate.rejected, color: "#BF0A30" },
             ]} />
             <p className="text-2xl font-bold mt-3" style={{ color: "#3B6D11" }}>{approvalRate.approvalPercent}%</p>
@@ -203,10 +213,10 @@ export default function AdminAnalytics() {
 
           <Card title="Content breakdown">
             <DonutChart segments={[
-              { label: "Vernacular words", value: vernacularWords, color: "var(--accent)" },
+              { label: "Vernacular words",   value: vernacularWords,   color: "var(--accent)" },
               { label: "Vernacular phrases", value: vernacularPhrases, color: "#4472c4" },
-              { label: "Tribal words", value: tribalWords, color: "#BA7517" },
-              { label: "Tribal phrases", value: tribalPhrases, color: "#EF9F27" },
+              { label: "Tribal words",       value: tribalWords,       color: "#BA7517" },
+              { label: "Tribal phrases",     value: tribalPhrases,     color: "#EF9F27" },
             ]} />
           </Card>
 
@@ -243,13 +253,11 @@ export default function AdminAnalytics() {
               <div className="space-y-3">
                 {data.topContributors.map((c, i) => (
                   <div key={c.email}>
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono w-4" style={{ color: "var(--text-muted)" }}>{i + 1}</span>
-                        <div>
-                          <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{c.displayName}</p>
-                          <p className="text-xs" style={{ color: "var(--text-muted)" }}>{c.email}</p>
-                        </div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-mono w-4" style={{ color: "var(--text-muted)" }}>{i + 1}</span>
+                      <div>
+                        <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{c.displayName}</p>
+                        <p className="text-xs" style={{ color: "var(--text-muted)" }}>{c.email}</p>
                       </div>
                     </div>
                     <MiniBar value={c.count} max={maxContrib} color="var(--accent)" />
@@ -266,13 +274,11 @@ export default function AdminAnalytics() {
               <div className="space-y-3">
                 {data.topApproved.map((c, i) => (
                   <div key={c.email}>
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono w-4" style={{ color: "var(--text-muted)" }}>{i + 1}</span>
-                        <div>
-                          <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{c.displayName}</p>
-                          <p className="text-xs" style={{ color: "var(--text-muted)" }}>{c.email}</p>
-                        </div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-mono w-4" style={{ color: "var(--text-muted)" }}>{i + 1}</span>
+                      <div>
+                        <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{c.displayName}</p>
+                        <p className="text-xs" style={{ color: "var(--text-muted)" }}>{c.email}</p>
                       </div>
                     </div>
                     <MiniBar value={c.count} max={maxApproved} color="#3B6D11" />
