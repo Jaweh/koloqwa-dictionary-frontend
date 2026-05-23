@@ -5,10 +5,12 @@ import { AdminRoute } from "@/components/auth/AdminRoute";
 import { useAuth } from "@/context/AuthContext";
 
 const NAV = [
-  { href: "/admin", label: "Overview", icon: "📊" },
+  { href: "/admin",             label: "Overview",    icon: "📊" },
   { href: "/admin/submissions", label: "Submissions", icon: "📝" },
-  { href: "/admin/users", label: "Users", icon: "👥" },
-  { href: "/admin/analytics", label: "Analytics", icon: "📈" },
+  { href: "/admin/reports",     label: "Reports",     icon: "🚩" },
+  { href: "/admin/suggestions", label: "Suggestions", icon: "✏️" },
+  { href: "/admin/users",       label: "Users",       icon: "👥" },
+  { href: "/admin/analytics",   label: "Analytics",   icon: "📈" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

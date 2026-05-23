@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { getMySubmissions, cancelSubmission } from "@/lib/auth-api";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { Pagination } from "@/components/ui/Pagination";
+import { FavouritesTab } from "./FavouritesTab";
 import type { SubmissionItem } from "@/types/auth";
 import type { PagedResult } from "@/types/dictionary";
 
@@ -60,8 +61,11 @@ function ConfirmDialog({
   );
 }
 
+type ActiveTab = "submissions" | "favourites";
+
 export function DashboardClient() {
   const { user, accessToken } = useAuth();
+  const [activeTab, setActiveTab] = useState<ActiveTab>("submissions");
   const [data, setData] = useState<PagedResult<SubmissionItem> | null>(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -142,88 +146,111 @@ export function DashboardClient() {
           </div>
         )}
 
-        {/* Submissions list */}
-        <div>
-          <h2 className="text-xs font-semibold uppercase tracking-widest mb-6"
-            style={{ color: "var(--text-muted)" }}>Submission history</h2>
+        {/* Tabs */}
+        <div className="flex gap-1 mb-8 p-1 rounded-xl w-fit"
+          style={{ background: "var(--bg-secondary)" }}>
+          {([
+            { id: "submissions", label: "Submission history" },
+            { id: "favourites", label: "♥ Favourites" },
+          ] as { id: ActiveTab; label: string }[]).map(tab => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              style={{
+                background: activeTab === tab.id ? "var(--bg-primary)" : "transparent",
+                color: activeTab === tab.id ? "var(--text-primary)" : "var(--text-muted)",
+                boxShadow: activeTab === tab.id ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+              }}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-          {loading ? (
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-20 rounded-2xl skeleton" />
-              ))}
-            </div>
-          ) : error ? (
-            <div className="text-center py-12">
-              <p className="text-sm" style={{ color: "var(--text-muted)" }}>{error}</p>
-            </div>
-          ) : data?.items.length === 0 ? (
-            <div className="text-center py-16 rounded-2xl border-2 border-dashed"
-              style={{ borderColor: "var(--border)" }}>
-              <div className="text-4xl mb-4">✍️</div>
-              <h3 className="font-display text-xl font-semibold mb-2"
-                style={{ color: "var(--text-primary)" }}>No submissions yet</h3>
-              <p className="text-sm max-w-sm mx-auto mb-6" style={{ color: "var(--text-muted)" }}>
-                You haven&apos;t submitted any words or phrases yet. Be the first to contribute!
-              </p>
-              <div className="flex gap-3 justify-center">
-                <Link href="/submit/word"
-                  className="px-6 py-2.5 rounded-xl text-sm font-medium text-white"
-                  style={{ background: "var(--accent)" }}>
-                  Submit a word
-                </Link>
-                <Link href="/submit/phrase"
-                  className="px-6 py-2.5 rounded-xl text-sm font-medium"
-                  style={{ background: "var(--bg-secondary)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}>
-                  Submit a phrase
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <>
+        {/* Tab content */}
+        {activeTab === "favourites" ? (
+          <FavouritesTab />
+        ) : (
+          <div>
+            <h2 className="text-xs font-semibold uppercase tracking-widest mb-6"
+              style={{ color: "var(--text-muted)" }}>Submission history</h2>
+
+            {loading ? (
               <div className="space-y-3">
-                {data?.items.map(item => (
-                  <div key={item.id} className="p-5 rounded-2xl border flex items-start justify-between gap-4"
-                    style={{ borderColor: "var(--border)", background: "var(--bg-primary)" }}>
-                    <div className="flex items-start gap-4 min-w-0">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-mono font-medium"
-                        style={{ background: "var(--bg-secondary)", color: "var(--text-muted)" }}>
-                        {item.entryType === "Word" ? "W" : "P"}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-display font-semibold italic truncate"
-                          style={{ color: "var(--text-primary)" }}>
-                          &ldquo;{item.entryPreview}&rdquo;
-                        </p>
-                        <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                          {item.entryType} · Submitted {new Date(item.submittedAt).toLocaleDateString("en-LR", { month: "short", day: "numeric", year: "numeric" })}
-                        </p>
-                        {item.adminNote && (
-                          <p className="text-xs mt-1.5 italic" style={{ color: "var(--text-secondary)" }}>
-                            Note: {item.adminNote}
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-20 rounded-2xl skeleton" />
+                ))}
+              </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>{error}</p>
+              </div>
+            ) : data?.items.length === 0 ? (
+              <div className="text-center py-16 rounded-2xl border-2 border-dashed"
+                style={{ borderColor: "var(--border)" }}>
+                <div className="text-4xl mb-4">✍️</div>
+                <h3 className="font-display text-xl font-semibold mb-2"
+                  style={{ color: "var(--text-primary)" }}>No submissions yet</h3>
+                <p className="text-sm max-w-sm mx-auto mb-6" style={{ color: "var(--text-muted)" }}>
+                  You haven&apos;t submitted any words or phrases yet. Be the first to contribute!
+                </p>
+                <div className="flex gap-3 justify-center">
+                  <Link href="/submit/word"
+                    className="px-6 py-2.5 rounded-xl text-sm font-medium text-white"
+                    style={{ background: "var(--accent)" }}>
+                    Submit a word
+                  </Link>
+                  <Link href="/submit/phrase"
+                    className="px-6 py-2.5 rounded-xl text-sm font-medium"
+                    style={{ background: "var(--bg-secondary)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}>
+                    Submit a phrase
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-3">
+                  {data?.items.map(item => (
+                    <div key={item.id} className="p-5 rounded-2xl border flex items-start justify-between gap-4"
+                      style={{ borderColor: "var(--border)", background: "var(--bg-primary)" }}>
+                      <div className="flex items-start gap-4 min-w-0">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-mono font-medium"
+                          style={{ background: "var(--bg-secondary)", color: "var(--text-muted)" }}>
+                          {item.entryType === "Word" ? "W" : "P"}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-display font-semibold italic truncate"
+                            style={{ color: "var(--text-primary)" }}>
+                            &ldquo;{item.entryPreview}&rdquo;
                           </p>
+                          <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                            {item.entryType} · Submitted {new Date(item.submittedAt).toLocaleDateString("en-LR", { month: "short", day: "numeric", year: "numeric" })}
+                          </p>
+                          {item.adminNote && (
+                            <p className="text-xs mt-1.5 italic" style={{ color: "var(--text-secondary)" }}>
+                              Note: {item.adminNote}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0 flex items-center gap-2">
+                        <StatusBadge status={item.status} />
+                        {item.status === "PendingReview" && (
+                          <button
+                            onClick={() => setPendingCancelId(item.id)}
+                            disabled={cancelling === item.id}
+                            className="text-xs px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50"
+                            style={{ color: "var(--text-muted)", border: "1px solid var(--border)", background: "var(--bg-secondary)" }}>
+                            {cancelling === item.id ? "Cancelling..." : "Cancel"}
+                          </button>
                         )}
                       </div>
                     </div>
-                    <div className="flex-shrink-0 flex items-center gap-2">
-                      <StatusBadge status={item.status} />
-                      {item.status === "PendingReview" && (
-                        <button
-                          onClick={() => setPendingCancelId(item.id)}
-                          disabled={cancelling === item.id}
-                          className="text-xs px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50"
-                          style={{ color: "var(--text-muted)", border: "1px solid var(--border)", background: "var(--bg-secondary)" }}>
-                          {cancelling === item.id ? "Cancelling..." : "Cancel"}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <Pagination page={page} totalPages={data?.totalPages ?? 1} onPage={setPage} />
-            </>
-          )}
-        </div>
+                  ))}
+                </div>
+                <Pagination page={page} totalPages={data?.totalPages ?? 1} onPage={setPage} />
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {pendingCancelId && (

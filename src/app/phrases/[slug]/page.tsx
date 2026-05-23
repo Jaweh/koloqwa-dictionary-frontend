@@ -3,19 +3,18 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Badge } from "@/components/ui/Badge";
 import { PhraseCard } from "@/components/dictionary/PhraseCard";
+import { WordActions } from "@/components/community/WordActions";
 import { languageFlag } from "@/lib/utils";
 import Link from "next/link";
 
-interface Props {
-  params: { slug: string };
-}
+interface Props { params: { slug: string } }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const phrase = await getPhraseBySlug(params.slug);
     return {
       title: phrase.phraseText,
-      description: phrase.meanings[0]?.meaning ?? `Meaning of "${phrase.phraseText}" in ${phrase.languageName}`,
+      description: phrase.meanings[0]?.meaning ?? `Meaning of "${phrase.phraseText}"`,
     };
   } catch {
     return { title: "Phrase not found" };
@@ -32,9 +31,27 @@ export default async function PhraseDetailPage({ params }: Props) {
 
   let related = null;
   try {
-    const r = await searchPhrases({ lang: phrase.languageCode ?? undefined, pageSize: 5 });
+    const r = await searchPhrases({
+      category: phrase.category,
+      lang: phrase.languageCode ?? undefined,
+      pageSize: 5,
+    });
     related = r.items.filter(p => p.slug !== params.slug).slice(0, 4);
   } catch {}
+
+  const fields = [
+    { label: "Phrase", value: phrase.phraseText },
+    ...(phrase.literalMeaning ? [{ label: "Literal meaning", value: phrase.literalMeaning }] : []),
+    ...phrase.meanings.map((m, i) => ({
+      label: `Meaning ${i + 1}`,
+      value: m.meaning,
+    })),
+  ];
+
+  const definitions = phrase.meanings.map(m => ({
+    id: m.id,
+    meaning: m.meaning,
+  }));
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
@@ -76,10 +93,9 @@ export default async function PhraseDetailPage({ params }: Props) {
       <hr className="divider-kola mb-10" />
 
       {/* Meanings */}
-      <div className="mb-12">
+      <div className="mb-4">
         <h2 className="text-xs font-semibold uppercase tracking-widest mb-6"
           style={{ color: "var(--text-muted)" }}>Meanings & Usage</h2>
-
         <div className="space-y-8">
           {phrase.meanings.map((meaning, i) => (
             <div key={meaning.id} className="flex gap-4">
@@ -105,13 +121,24 @@ export default async function PhraseDetailPage({ params }: Props) {
         </div>
       </div>
 
+      {/* Community actions */}
+      <WordActions
+        entryId={phrase.id}
+        entryType="Phrase"
+        slug={params.slug}
+        fields={fields}
+        definitions={definitions}
+      />
+
       {/* Related phrases */}
       {related && related.length > 0 && (
         <>
           <hr className="divider-kola mb-10" />
           <div>
             <h2 className="text-xs font-semibold uppercase tracking-widest mb-6"
-              style={{ color: "var(--text-muted)" }}>More {phrase.languageName} Phrases</h2>
+              style={{ color: "var(--text-muted)" }}>
+              More {phrase.languageName ?? "Vernacular"} Phrases
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {related.map(p => <PhraseCard key={p.id} phrase={p} />)}
             </div>

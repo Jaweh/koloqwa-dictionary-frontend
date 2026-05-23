@@ -4,19 +4,18 @@ import type { Metadata } from "next";
 import { Badge } from "@/components/ui/Badge";
 import { DefinitionBlock } from "@/components/dictionary/DefinitionBlock";
 import { WordCard } from "@/components/dictionary/WordCard";
+import { WordActions } from "@/components/community/WordActions";
 import { formatPartOfSpeech, languageFlag } from "@/lib/utils";
 import Link from "next/link";
 
-interface Props {
-  params: { slug: string };
-}
+interface Props { params: { slug: string } }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const word = await getWordBySlug(params.slug);
     return {
       title: word.headword,
-      description: word.definitions[0]?.definition ?? `Definition of ${word.headword} in ${word.languageName}`,
+      description: word.definitions[0]?.definition ?? `Definition of ${word.headword}`,
     };
   } catch {
     return { title: "Word not found" };
@@ -31,12 +30,31 @@ export default async function WordDetailPage({ params }: Props) {
     notFound();
   }
 
-  // Fetch related words from same language
   let related = null;
   try {
-    const r = await searchWords({ lang: word.languageCode ?? undefined, pageSize: 4 });
+    const r = await searchWords({
+      category: word.category,
+      lang: word.languageCode ?? undefined,
+      pageSize: 4,
+    });
     related = r.items.filter(w => w.slug !== params.slug).slice(0, 3);
   } catch {}
+
+  // Build editable fields for suggest-edit form
+  const fields = [
+    { label: "Headword", value: word.headword },
+    ...(word.pronunciation ? [{ label: "Pronunciation", value: word.pronunciation }] : []),
+    ...word.definitions.map((d, i) => ({
+      label: `Definition ${i + 1}`,
+      value: d.definition,
+    })),
+  ];
+
+  // Build definitions for voting
+  const definitions = word.definitions.map(d => ({
+    id: d.id,
+    definition: d.definition,
+  }));
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
@@ -79,7 +97,7 @@ export default async function WordDetailPage({ params }: Props) {
       <hr className="divider-kola mb-10" />
 
       {/* Definitions */}
-      <div className="mb-12">
+      <div className="mb-4">
         <h2 className="text-xs font-semibold uppercase tracking-widest mb-6"
           style={{ color: "var(--text-muted)" }}>Definitions</h2>
         <div className="space-y-8">
@@ -89,6 +107,15 @@ export default async function WordDetailPage({ params }: Props) {
         </div>
       </div>
 
+      {/* Community actions — favourite, suggest edit, report, votes */}
+      <WordActions
+        entryId={word.id}
+        entryType="Word"
+        slug={params.slug}
+        fields={fields}
+        definitions={definitions}
+      />
+
       {/* Related words */}
       {related && related.length > 0 && (
         <>
@@ -96,7 +123,7 @@ export default async function WordDetailPage({ params }: Props) {
           <div>
             <h2 className="text-xs font-semibold uppercase tracking-widest mb-6"
               style={{ color: "var(--text-muted)" }}>
-              More from {word.languageName}
+              More from {word.languageName ?? "Vernacular"}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {related.map(w => <WordCard key={w.id} word={w} />)}
@@ -105,7 +132,6 @@ export default async function WordDetailPage({ params }: Props) {
         </>
       )}
 
-      {/* Meta */}
       {word.publishedAt && (
         <p className="text-xs mt-12" style={{ color: "var(--text-muted)" }}>
           Added {new Date(word.publishedAt).toLocaleDateString("en-LR", { year: "numeric", month: "long", day: "numeric" })}

@@ -87,10 +87,6 @@ export async function reviewSubmission(
   }, token);
 }
 
-export async function getSubmissionDetail(token: string, id: string): Promise<Record<string, unknown>> {
-  return fetchAdmin<Record<string, unknown>>(`/admin/submissions/${id}/detail`, {}, token);
-}
-
 export async function deleteSubmission(token: string, id: string): Promise<void> {
   await fetchAdmin(`/admin/submissions/${id}`, { method: "DELETE" }, token);
 }
@@ -129,5 +125,77 @@ export async function updateUserRole(token: string, userId: string, role: string
 export async function toggleUserActive(token: string, userId: string, isActive: boolean): Promise<void> {
   await fetchAdmin(`/admin/users/${userId}/active`, {
     method: "PUT", body: JSON.stringify({ isActive }),
+  }, token);
+}
+
+export interface AdminReport {
+  id: string;
+  entryId: string;
+  entryType: string;
+  entryPreview: string;
+  entrySlug: string | null;
+  reason: string;
+  notes: string | null;
+  status: string;
+  reporterName: string;
+  reporterEmail: string;
+  reportedAt: string;
+  reviewedAt: string | null;
+  reviewedByName: string | null;
+}
+
+export interface AdminSuggestion {
+  id: string;
+  entryId: string;
+  entryType: string;
+  entryPreview: string;
+  entrySlug: string | null;
+  field: string;
+  currentValue: string;
+  suggestedValue: string;
+  notes: string | null;
+  status: string;
+  suggesterName: string;
+  suggesterEmail: string;
+  submittedAt: string;
+  reviewedAt: string | null;
+  reviewedByName: string | null;
+  adminNote: string | null;
+}
+
+export async function getAdminReports(
+  token: string,
+  params: { status?: string; reason?: string; page?: number }
+): Promise<PagedResult<AdminReport>> {
+  const q = new URLSearchParams();
+  if (params.status) q.set("status", params.status);
+  if (params.reason) q.set("reason", params.reason);
+  q.set("page", String(params.page ?? 1));
+  return fetchAdmin<PagedResult<AdminReport>>(`/admin/reports?${q}`, {}, token);
+}
+
+export async function reviewReport(
+  token: string, id: string, action: "Dismiss" | "Delete"
+): Promise<void> {
+  await fetchAdmin(`/admin/reports/${id}/review`, {
+    method: "POST", body: JSON.stringify({ action }),
+  }, token);
+}
+
+export async function getAdminSuggestions(
+  token: string,
+  params: { status?: string; page?: number }
+): Promise<PagedResult<AdminSuggestion>> {
+  const q = new URLSearchParams();
+  if (params.status) q.set("status", params.status);
+  q.set("page", String(params.page ?? 1));
+  return fetchAdmin<PagedResult<AdminSuggestion>>(`/admin/suggestions?${q}`, {}, token);
+}
+
+export async function reviewSuggestion(
+  token: string, id: string, action: "Accept" | "Reject", adminNote?: string
+): Promise<void> {
+  await fetchAdmin(`/admin/suggestions/${id}/review`, {
+    method: "POST", body: JSON.stringify({ action, adminNote: adminNote ?? null }),
   }, token);
 }
