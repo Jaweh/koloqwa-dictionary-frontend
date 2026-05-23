@@ -34,7 +34,7 @@ export default async function WordDetailPage({ params }: Props) {
   // Fetch related words from same language
   let related = null;
   try {
-    const r = await searchWords({ lang: word.languageCode, pageSize: 4 });
+    const r = await searchWords({ lang: word.languageCode ?? undefined, pageSize: 4 });
     related = r.items.filter(w => w.slug !== params.slug).slice(0, 3);
   } catch {}
 
@@ -58,7 +58,7 @@ export default async function WordDetailPage({ params }: Props) {
           <div className="flex flex-wrap items-center gap-2 mt-3">
             <Badge variant="pos">{formatPartOfSpeech(word.partOfSpeech)}</Badge>
             <Badge variant="language">
-              {languageFlag(word.languageCode)} {word.languageName}
+              {languageFlag(word.languageCode ?? "")} {word.languageName ?? "Vernacular"}
             </Badge>
           </div>
         </div>

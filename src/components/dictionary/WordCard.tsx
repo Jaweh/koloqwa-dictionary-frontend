@@ -23,7 +23,7 @@ export function WordCard({ word }: { word: WordSummary }) {
       </p>
 
       <div className="flex items-center gap-2">
-        <span className="text-base">{languageFlag(word.languageCode)}</span>
+        <span className="text-base">{languageFlag(word.languageCode ?? "")}</span>
         <Badge variant="language">{word.languageName}</Badge>
       </div>
     </Link>

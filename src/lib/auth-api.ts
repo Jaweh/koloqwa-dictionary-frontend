@@ -100,3 +100,12 @@ export async function changePassword(
   const json = await res.json();
   if (!json.success) throw new Error(json.message ?? "Failed to change password");
 }
+
+export async function cancelSubmission(id: string, accessToken: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/submissions/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.message ?? "Failed to cancel submission");
+}

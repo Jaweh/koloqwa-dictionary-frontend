@@ -20,7 +20,7 @@ export function PhraseCard({ phrase }: { phrase: PhraseSummary }) {
       </p>
 
       <div className="flex items-center gap-2">
-        <span>{languageFlag(phrase.languageCode)}</span>
+        <span>{languageFlag(phrase.languageCode ?? "")}</span>
         <Badge variant="language">{phrase.languageName}</Badge>
       </div>
     </Link>

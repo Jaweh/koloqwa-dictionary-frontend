@@ -32,7 +32,7 @@ export default async function PhraseDetailPage({ params }: Props) {
 
   let related = null;
   try {
-    const r = await searchPhrases({ lang: phrase.languageCode, pageSize: 5 });
+    const r = await searchPhrases({ lang: phrase.languageCode ?? undefined, pageSize: 5 });
     related = r.items.filter(p => p.slug !== params.slug).slice(0, 4);
   } catch {}
 
@@ -56,7 +56,7 @@ export default async function PhraseDetailPage({ params }: Props) {
 
         <div className="flex flex-wrap items-center gap-2 mb-4">
           <Badge variant="language">
-            {languageFlag(phrase.languageCode)} {phrase.languageName}
+            {languageFlag(phrase.languageCode ?? "")} {phrase.languageName ?? "Vernacular"}
           </Badge>
           {phrase.tags.map(tag => <Badge key={tag} variant="tag">{tag}</Badge>)}
         </div>

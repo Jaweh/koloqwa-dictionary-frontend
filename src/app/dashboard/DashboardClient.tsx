@@ -25,6 +25,41 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+function ConfirmDialog({
+  message, onConfirm, onCancel, loading,
+}: {
+  message: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  loading: boolean;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.5)" }}
+      onClick={e => { if (e.target === e.currentTarget) onCancel(); }}>
+      <div className="w-full max-w-sm rounded-2xl p-6 shadow-2xl"
+        style={{ background: "var(--bg-primary)", border: "1px solid var(--border)" }}>
+        <div className="text-2xl mb-4 text-center">⚠️</div>
+        <p className="text-sm font-medium text-center mb-6" style={{ color: "var(--text-primary)" }}>
+          {message}
+        </p>
+        <div className="flex gap-3">
+          <button onClick={onConfirm} disabled={loading}
+            className="flex-1 h-10 rounded-xl text-sm font-medium text-white disabled:opacity-50"
+            style={{ background: "#BF0A30" }}>
+            {loading ? "Cancelling..." : "Yes, cancel it"}
+          </button>
+          <button onClick={onCancel} disabled={loading}
+            className="flex-1 h-10 rounded-xl text-sm font-medium"
+            style={{ background: "var(--bg-secondary)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}>
+            Keep it
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function DashboardClient() {
   const { user, accessToken } = useAuth();
   const [data, setData] = useState<PagedResult<SubmissionItem> | null>(null);
@@ -32,6 +67,7 @@ export function DashboardClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [cancelling, setCancelling] = useState<string | null>(null);
+  const [pendingCancelId, setPendingCancelId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -43,7 +79,6 @@ export function DashboardClient() {
   }, [accessToken, page]);
 
   async function handleCancel(id: string) {
-    if (!confirm("Cancel this submission? The word or phrase will be permanently removed.")) return;
     setCancelling(id);
     try {
       await cancelSubmission(id, accessToken!);
@@ -56,6 +91,7 @@ export function DashboardClient() {
       alert((e as Error).message);
     } finally {
       setCancelling(null);
+      setPendingCancelId(null);
     }
   }
 
@@ -173,7 +209,7 @@ export function DashboardClient() {
                       <StatusBadge status={item.status} />
                       {item.status === "PendingReview" && (
                         <button
-                          onClick={() => handleCancel(item.id)}
+                          onClick={() => setPendingCancelId(item.id)}
                           disabled={cancelling === item.id}
                           className="text-xs px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50"
                           style={{ color: "var(--text-muted)", border: "1px solid var(--border)", background: "var(--bg-secondary)" }}>
@@ -189,6 +225,15 @@ export function DashboardClient() {
           )}
         </div>
       </div>
+
+      {pendingCancelId && (
+        <ConfirmDialog
+          message="Cancel this submission? The word or phrase will be permanently removed."
+          onConfirm={() => handleCancel(pendingCancelId)}
+          onCancel={() => setPendingCancelId(null)}
+          loading={cancelling === pendingCancelId}
+        />
+      )}
     </ProtectedRoute>
   );
 }
