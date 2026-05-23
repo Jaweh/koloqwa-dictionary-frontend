@@ -19,6 +19,7 @@ const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }
 interface EditState {
   headword?: string; definition?: string; usageNote?: string; pronunciation?: string;
   phraseText?: string; meaning?: string; contextNote?: string; literalMeaning?: string;
+  tags?: string;
 }
 
 export default function AdminSubmissions() {
@@ -89,6 +90,9 @@ export default function AdminSubmissions() {
           definition: editState.definition || undefined,
           usageNote: editState.usageNote || undefined,
           pronunciation: editState.pronunciation || undefined,
+          tags: editState.tags
+            ? editState.tags.split(",").map(t => t.trim()).filter(Boolean)
+            : undefined,
         });
       } else {
         await editPhraseEntry(accessToken, selected.entryId, {
@@ -96,6 +100,9 @@ export default function AdminSubmissions() {
           meaning: editState.meaning || undefined,
           contextNote: editState.contextNote || undefined,
           literalMeaning: editState.literalMeaning || undefined,
+          tags: editState.tags
+            ? editState.tags.split(",").map(t => t.trim()).filter(Boolean)
+            : undefined,
         });
       }
       setEditMode(false);
@@ -109,7 +116,6 @@ export default function AdminSubmissions() {
     setAdminNote(item.adminNote ?? "");
     setEditMode(false);
 
-    // Fetch full entry details to pre-populate edit fields
     try {
       const detail = await getSubmissionDetail(accessToken!, item.id);
       setEditState({
@@ -121,14 +127,33 @@ export default function AdminSubmissions() {
         literalMeaning: (detail.literalMeaning as string) ?? "",
         meaning: (detail.meaning as string) ?? "",
         contextNote: (detail.contextNote as string) ?? "",
+        tags: Array.isArray(detail.tags)
+          ? (detail.tags as string[]).join(", ")
+          : "",
       });
     } catch {
       setEditState({
         headword: item.entryPreview,
         phraseText: item.entryPreview,
+        tags: "",
       });
     }
   }
+
+  const tagField = (
+    <div>
+      <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-muted)" }}>
+        Tags <span className="font-normal">(comma separated)</span>
+      </label>
+      <input
+        value={editState.tags ?? ""}
+        onChange={e => setEditState(s => ({ ...s, tags: e.target.value }))}
+        placeholder="slang, youth, street"
+        className="w-full h-9 px-3 rounded-lg border text-sm outline-none"
+        style={{ background: "var(--bg-secondary)", borderColor: "var(--border)", color: "var(--text-primary)" }}
+      />
+    </div>
+  );
 
   return (
     <div>
@@ -307,6 +332,7 @@ export default function AdminSubmissions() {
                         className="w-full h-9 px-3 rounded-lg border text-sm outline-none"
                         style={{ background: "var(--bg-secondary)", borderColor: "var(--border)", color: "var(--text-primary)" }} />
                     </div>
+                    {tagField}
                   </>
                 ) : (
                   <>
@@ -334,6 +360,7 @@ export default function AdminSubmissions() {
                         className="w-full h-9 px-3 rounded-lg border text-sm outline-none"
                         style={{ background: "var(--bg-secondary)", borderColor: "var(--border)", color: "var(--text-primary)" }} />
                     </div>
+                    {tagField}
                   </>
                 )}
                 <div className="flex gap-2 pt-2">

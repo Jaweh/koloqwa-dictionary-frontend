@@ -2,9 +2,9 @@ import { getPhraseBySlug, searchPhrases } from "@/lib/api";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Badge } from "@/components/ui/Badge";
+import { TribeMask } from "@/components/ui/TribeMask";
 import { PhraseCard } from "@/components/dictionary/PhraseCard";
 import { WordActions } from "@/components/community/WordActions";
-import { languageFlag } from "@/lib/utils";
 import Link from "next/link";
 
 interface Props { params: { slug: string } }
@@ -46,6 +46,7 @@ export default async function PhraseDetailPage({ params }: Props) {
       label: `Meaning ${i + 1}`,
       value: m.meaning,
     })),
+    { label: "Tags", value: phrase.tags.join(", ") },
   ];
 
   const definitions = phrase.meanings.map(m => ({
@@ -73,7 +74,9 @@ export default async function PhraseDetailPage({ params }: Props) {
 
         <div className="flex flex-wrap items-center gap-2 mb-4">
           <Badge variant="language">
-            {languageFlag(phrase.languageCode ?? "")} {phrase.languageName ?? "Vernacular"}
+            {phrase.languageCode
+              ? <><TribeMask code={phrase.languageCode} size={16} /> {phrase.languageName}</>
+              : "🗣️ Vernacular"}
           </Badge>
           {phrase.tags.map(tag => <Badge key={tag} variant="tag">{tag}</Badge>)}
         </div>

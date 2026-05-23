@@ -78,6 +78,10 @@ export async function getAdminSubmissions(
   return fetchAdmin<PagedResult<AdminSubmission>>(`/admin/submissions?${q}`, {}, token);
 }
 
+export async function getSubmissionDetail(token: string, id: string): Promise<Record<string, unknown>> {
+  return fetchAdmin<Record<string, unknown>>(`/admin/submissions/${id}/detail`, {}, token);
+}
+
 export async function reviewSubmission(
   token: string, id: string, action: "Approve" | "Reject", adminNote?: string
 ): Promise<void> {

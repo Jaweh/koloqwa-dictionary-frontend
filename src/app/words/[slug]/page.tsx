@@ -2,6 +2,7 @@ import { getWordBySlug, searchWords } from "@/lib/api";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Badge } from "@/components/ui/Badge";
+import { TribeMask } from "@/components/ui/TribeMask";
 import { DefinitionBlock } from "@/components/dictionary/DefinitionBlock";
 import { WordCard } from "@/components/dictionary/WordCard";
 import { WordActions } from "@/components/community/WordActions";
@@ -48,6 +49,7 @@ export default async function WordDetailPage({ params }: Props) {
       label: `Definition ${i + 1}`,
       value: d.definition,
     })),
+    { label: "Tags", value: word.tags.join(", ") },
   ];
 
   // Build definitions for voting
@@ -76,7 +78,9 @@ export default async function WordDetailPage({ params }: Props) {
           <div className="flex flex-wrap items-center gap-2 mt-3">
             <Badge variant="pos">{formatPartOfSpeech(word.partOfSpeech)}</Badge>
             <Badge variant="language">
-              {languageFlag(word.languageCode ?? "")} {word.languageName ?? "Vernacular"}
+              {word.languageCode
+                ? <><TribeMask code={word.languageCode} size={16} /> {word.languageName}</>
+                : "🗣️ Vernacular"}
             </Badge>
           </div>
         </div>

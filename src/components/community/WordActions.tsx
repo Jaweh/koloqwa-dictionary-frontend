@@ -24,7 +24,7 @@ const REPORT_REASONS = [
 ];
 
 export function WordActions({ entryId, entryType, slug, fields, definitions }: WordActionsProps) {
-  const { user, accessToken, isAuthenticated } = useAuth();
+  const { accessToken, isAuthenticated } = useAuth();
   const router = useRouter();
 
   const [context, setContext] = useState<EntryContext | null>(null);
@@ -49,6 +49,12 @@ export function WordActions({ entryId, entryType, slug, fields, definitions }: W
   const [reportNotes, setReportNotes] = useState("");
   const [reportLoading, setReportLoading] = useState(false);
   const [reportSuccess, setReportSuccess] = useState(false);
+
+  // Sync initial field when fields prop changes
+  useEffect(() => {
+    setSuggestField(fields[0]?.label ?? "");
+    setSuggestCurrent(fields[0]?.value ?? "");
+  }, [fields]);
 
   useEffect(() => {
     getEntryContext(entryType, entryId, accessToken ?? undefined)
@@ -257,9 +263,17 @@ export function WordActions({ entryId, entryType, slug, fields, definitions }: W
                     Suggested value <span style={{ color: "#BF0A30" }}>*</span>
                   </label>
                   <textarea value={suggestValue} onChange={e => setSuggestValue(e.target.value)}
-                    rows={3} required placeholder="Enter your suggested correction..."
+                    rows={3} required
+                    placeholder={suggestField === "Tags"
+                      ? "Enter tags separated by commas, e.g. slang, youth, street"
+                      : "Enter your suggested correction..."}
                     className="w-full px-3 py-2 rounded-lg border text-sm outline-none resize-none"
                     style={{ background: "var(--bg-secondary)", borderColor: "var(--border)", color: "var(--text-primary)" }} />
+                  {suggestField === "Tags" && (
+                    <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                      Separate each tag with a comma. Current tags: <span className="italic">{suggestCurrent || "none"}</span>
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>

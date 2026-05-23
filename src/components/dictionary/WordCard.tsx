@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { formatPartOfSpeech, languageFlag } from "@/lib/utils";
+import { TribeMask } from "@/components/ui/TribeMask";
 import type { WordSummary } from "@/types/dictionary";
 
 export function WordCard({ word }: { word: WordSummary }) {
@@ -23,7 +24,9 @@ export function WordCard({ word }: { word: WordSummary }) {
       </p>
 
       <div className="flex items-center gap-2">
-        <span className="text-base">{languageFlag(word.languageCode ?? "")}</span>
+        {word.languageCode
+          ? <TribeMask code={word.languageCode} size={18} />
+          : <span className="text-base">{languageFlag(word.languageCode ?? "")}</span>}
         <Badge variant="language">{word.languageName}</Badge>
       </div>
     </Link>

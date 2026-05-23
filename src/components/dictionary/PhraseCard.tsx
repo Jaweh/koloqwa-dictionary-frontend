@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { languageFlag } from "@/lib/utils";
+import { TribeMask } from "@/components/ui/TribeMask";
 import type { PhraseSummary } from "@/types/dictionary";
 
 export function PhraseCard({ phrase }: { phrase: PhraseSummary }) {
@@ -20,7 +21,9 @@ export function PhraseCard({ phrase }: { phrase: PhraseSummary }) {
       </p>
 
       <div className="flex items-center gap-2">
-        <span>{languageFlag(phrase.languageCode ?? "")}</span>
+        {phrase.languageCode
+          ? <TribeMask code={phrase.languageCode} size={18} />
+          : <span>{languageFlag(phrase.languageCode ?? "")}</span>}
         <Badge variant="language">{phrase.languageName}</Badge>
       </div>
     </Link>
