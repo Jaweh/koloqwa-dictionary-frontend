@@ -12,9 +12,17 @@ interface Props { params: { slug: string } }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const phrase = await getPhraseBySlug(params.slug);
+    const description = phrase.meanings[0]?.meaning ?? `Meaning of ${phrase.phraseText}`;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://koloqwa.lr";
     return {
       title: phrase.phraseText,
-      description: phrase.meanings[0]?.meaning ?? `Meaning of "${phrase.phraseText}"`,
+      description,
+      openGraph: {
+        title: `"${phrase.phraseText}" — Koloqwa Dictionary`,
+        description,
+        url: `${appUrl}/phrases/${params.slug}`,
+        type: "article",
+      },
     };
   } catch {
     return { title: "Phrase not found" };

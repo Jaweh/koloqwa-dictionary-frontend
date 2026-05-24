@@ -14,9 +14,17 @@ interface Props { params: { slug: string } }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const word = await getWordBySlug(params.slug);
+    const description = word.definitions[0]?.definition ?? `Definition of ${word.headword}`;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://koloqwa.lr";
     return {
       title: word.headword,
-      description: word.definitions[0]?.definition ?? `Definition of ${word.headword}`,
+      description,
+      openGraph: {
+        title: `${word.headword} — Koloqwa Dictionary`,
+        description,
+        url: `${appUrl}/words/${params.slug}`,
+        type: "article",
+      },
     };
   } catch {
     return { title: "Word not found" };

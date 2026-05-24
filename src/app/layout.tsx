@@ -18,6 +18,20 @@ export const metadata: Metadata = {
     siteName: "Koloqwa Dictionary",
     type: "website",
     locale: "en_LR",
+    url: process.env.NEXT_PUBLIC_APP_URL ?? "https://koloqwa.lr",
+    images: [
+      {
+        url: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://koloqwa.lr"}/og-image.png`,
+        width: 1200,
+        height: 630,
+        alt: "Koloqwa Dictionary — Liberian Languages",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Koloqwa Dictionary — Liberian Languages",
+    description: "The definitive dictionary for Liberian local language words and phrases.",
   },
 };
 

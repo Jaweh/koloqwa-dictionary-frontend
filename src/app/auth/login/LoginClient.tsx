@@ -92,6 +92,12 @@ export function LoginClient() {
                 </button>
               </div>
             </FormField>
+            <div className="text-right -mt-2">
+              <Link href="/auth/forgot-password" className="text-xs"
+                style={{ color: "var(--text-muted)" }}>
+                Forgot password?
+              </Link>
+            </div>
 
             <Button type="submit" loading={loading} fullWidth>
               {loading ? "Signing in..." : "Sign in"}
