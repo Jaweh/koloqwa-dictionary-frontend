@@ -6,10 +6,11 @@ export const metadata: Metadata = {
   description: "Search Liberian language phrases, expressions and idioms.",
 };
 
-export default function PhraseSearchPage({
+export default async function PhraseSearchPage({
   searchParams,
 }: {
-  searchParams: { q?: string };
+  searchParams: Promise<{ q?: string }>;
 }) {
-  return <PhraseSearchClient initialQuery={searchParams.q ?? ""} />;
+  const { q } = await searchParams;
+  return <PhraseSearchClient initialQuery={q ?? ""} />;
 }

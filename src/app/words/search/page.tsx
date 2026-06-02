@@ -6,15 +6,16 @@ export const metadata: Metadata = {
   description: "Search the Koloqwa Dictionary for Liberian language words.",
 };
 
-export default function WordSearchPage({
+export default async function WordSearchPage({
   searchParams,
 }: {
-  searchParams: { q?: string; lang?: string; page?: string };
+  searchParams: Promise<{ q?: string; lang?: string; page?: string }>;
 }) {
+  const { q, lang } = await searchParams;
   return (
     <WordSearchClient
-      initialQuery={searchParams.q ?? ""}
-      initialLang={searchParams.lang ?? ""}
+      initialQuery={q ?? ""}
+      initialLang={lang ?? ""}
     />
   );
 }
