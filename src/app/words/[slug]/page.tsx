@@ -6,23 +6,24 @@ import { TribeMask } from "@/components/ui/TribeMask";
 import { DefinitionBlock } from "@/components/dictionary/DefinitionBlock";
 import { WordCard } from "@/components/dictionary/WordCard";
 import { WordActions } from "@/components/community/WordActions";
-import { formatPartOfSpeech, languageFlag } from "@/lib/utils";
+import { formatPartOfSpeech } from "@/lib/utils";
 import Link from "next/link";
 
-interface Props { params: { slug: string } }
+interface Props { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
-    const word = await getWordBySlug(params.slug);
+    const { slug } = await params;
+    const word = await getWordBySlug(slug);
     const description = word.definitions[0]?.definition ?? `Definition of ${word.headword}`;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://koloqwa.lr";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://koloqwa.com";
     return {
       title: word.headword,
       description,
       openGraph: {
         title: `${word.headword} — Koloqwa Dictionary`,
         description,
-        url: `${appUrl}/words/${params.slug}`,
+        url: `${appUrl}/words/${slug}`,
         type: "article",
       },
     };
@@ -32,9 +33,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function WordDetailPage({ params }: Props) {
+  const { slug } = await params;
+
   let word;
   try {
-    word = await getWordBySlug(params.slug);
+    word = await getWordBySlug(slug);
   } catch {
     notFound();
   }
@@ -46,10 +49,9 @@ export default async function WordDetailPage({ params }: Props) {
       lang: word.languageCode ?? undefined,
       pageSize: 4,
     });
-    related = r.items.filter(w => w.slug !== params.slug).slice(0, 3);
+    related = r.items.filter(w => w.slug !== slug).slice(0, 3);
   } catch {}
 
-  // Build editable fields for suggest-edit form
   const fields = [
     { label: "Headword", value: word.headword },
     ...(word.pronunciation ? [{ label: "Pronunciation", value: word.pronunciation }] : []),
@@ -60,7 +62,6 @@ export default async function WordDetailPage({ params }: Props) {
     { label: "Tags", value: word.tags.join(", ") },
   ];
 
-  // Build definitions for voting
   const definitions = word.definitions.map(d => ({
     id: d.id,
     definition: d.definition,
@@ -119,11 +120,11 @@ export default async function WordDetailPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Community actions — favourite, suggest edit, report, votes */}
+      {/* Community actions */}
       <WordActions
         entryId={word.id}
         entryType="Word"
-        slug={params.slug}
+        slug={slug}
         fields={fields}
         definitions={definitions}
       />

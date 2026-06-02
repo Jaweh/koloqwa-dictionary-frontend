@@ -7,20 +7,21 @@ import { PhraseCard } from "@/components/dictionary/PhraseCard";
 import { WordActions } from "@/components/community/WordActions";
 import Link from "next/link";
 
-interface Props { params: { slug: string } }
+interface Props { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
-    const phrase = await getPhraseBySlug(params.slug);
+    const { slug } = await params;
+    const phrase = await getPhraseBySlug(slug);
     const description = phrase.meanings[0]?.meaning ?? `Meaning of ${phrase.phraseText}`;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://koloqwa.lr";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://koloqwa.com";
     return {
       title: phrase.phraseText,
       description,
       openGraph: {
         title: `"${phrase.phraseText}" — Koloqwa Dictionary`,
         description,
-        url: `${appUrl}/phrases/${params.slug}`,
+        url: `${appUrl}/phrases/${slug}`,
         type: "article",
       },
     };
@@ -30,9 +31,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function PhraseDetailPage({ params }: Props) {
+  const { slug } = await params;
+
   let phrase;
   try {
-    phrase = await getPhraseBySlug(params.slug);
+    phrase = await getPhraseBySlug(slug);
   } catch {
     notFound();
   }
@@ -44,7 +47,7 @@ export default async function PhraseDetailPage({ params }: Props) {
       lang: phrase.languageCode ?? undefined,
       pageSize: 5,
     });
-    related = r.items.filter(p => p.slug !== params.slug).slice(0, 4);
+    related = r.items.filter(p => p.slug !== slug).slice(0, 4);
   } catch {}
 
   const fields = [
@@ -136,7 +139,7 @@ export default async function PhraseDetailPage({ params }: Props) {
       <WordActions
         entryId={phrase.id}
         entryType="Phrase"
-        slug={params.slug}
+        slug={slug}
         fields={fields}
         definitions={definitions}
       />

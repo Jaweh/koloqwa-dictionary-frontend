@@ -15,12 +15,12 @@ import { TribeMask } from "@/components/ui/TribeMask";
 import type { WordSummary, PhraseSummary } from "@/types/dictionary";
 
 const VERNACULAR_SAMPLES = [
-  { word: "How the body?", meaning: "How are you? / How are you doing?" },
-  { word: "Soft life", meaning: "An easy, comfortable lifestyle" },
-  { word: "Paining me", meaning: "It's hurting me / causing me pain" },
-  { word: "Seh wah?", meaning: "Say what? / Really? / Is that so?" },
-  { word: "On the way-o", meaning: "I'm coming / I'm on my way" },
-  { word: "Fine-o", meaning: "I'm fine / Things are good" },
+  { word: "Ha lay balay?", meaning: "How are you? / How are you doing?" },
+  { word: "She geh belleh", meaning: "She is pregnant" },
+  { word: "Your kahn leh go", meaning: "Join me, let us go" },
+  { word: "Wetin you say?", meaning: "What did you say?" },
+  { word: "Wehplay you eh", meaning: "Where are you?" },
+  { word: "We nahn going", meaning: "We are not going" },
 ];
 
 const PAGE_SIZE = 6;
@@ -141,7 +141,7 @@ export function HomepageClient({
               <SearchInput
                 value={wordSearch.query}
                 onChange={wordSearch.setQuery}
-                placeholder='Try "dartor", "ehvah", "wetin"...'
+                placeholder='Try "dartor"'
                 loading={wordSearch.loading}
                 size="lg"
                 autoFocus
@@ -150,7 +150,7 @@ export function HomepageClient({
               <SearchInput
                 value={phraseSearch.query}
                 onChange={phraseSearch.setQuery}
-                placeholder='Try "wehplay you eh", "ehn neh", "nah bah"...'
+                placeholder='Try "wehplay you eh"'
                 loading={phraseSearch.loading}
                 size="lg"
                 autoFocus

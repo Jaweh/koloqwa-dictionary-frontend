@@ -5,20 +5,22 @@ import { getTribe, TRIBES } from "@/lib/tribes";
 import { TribePageClient } from "./TribePageClient";
 import { TribeMask } from "@/components/ui/TribeMask";
 
-interface Props { params: { code: string } }
+interface Props { params: Promise<{ code: string }> }
 
 export async function generateStaticParams() {
   return TRIBES.map(t => ({ code: t.code }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const tribe = getTribe(params.code);
+  const { code } = await params;
+  const tribe = getTribe(code);
   if (!tribe) return { title: "Tribe not found" };
   return { title: `${tribe.name} Language`, description: tribe.description };
 }
 
-export default function TribePage({ params }: Props) {
-  const tribe = getTribe(params.code);
+export default async function TribePage({ params }: Props) {
+  const { code } = await params;
+  const tribe = getTribe(code);
   if (!tribe) notFound();
 
   return (
@@ -72,13 +74,13 @@ export default function TribePage({ params }: Props) {
         </div>
       </section>
 
-      <TribePageClient tribeCode={tribe.code} tribeName={tribe.name} tribeFlag={tribe.flag} />
+      <TribePageClient tribeCode={tribe.code} tribeName={tribe.name} tribeFlag="" />
 
       <section className="mt-16">
         <h2 className="text-xs font-semibold uppercase tracking-widest mb-6"
           style={{ color: "var(--text-muted)" }}>Other Liberian Languages</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {TRIBES.filter(t => t.code !== params.code).slice(0, 8).map(t => (
+          {TRIBES.filter(t => t.code !== code).slice(0, 8).map(t => (
             <Link key={t.code} href={`/tribes/${t.code}`}
               className="p-4 rounded-xl border text-center card-hover group flex flex-col items-center gap-2"
               style={{ borderColor: "var(--border)", background: "var(--bg-secondary)" }}>
